@@ -51,8 +51,8 @@ crontab -e
 Add:
 
 ```
-# every 5 mins
-*/5 * * * * /path/to/ddns-updater >> /var/log/ddns-updater.log 2>&1
+# every 15 mins
+*/15 * * * * /path/to/ddns-updater >> logs/ddns-updater.log 2>&1
 ```
 
 ---
@@ -88,3 +88,8 @@ sudo systemctl start ddns-updater
 ```
 
 ---
+
+## TODO
+
+- Add logrotate to logfile
+- Use Slog and timestamp
