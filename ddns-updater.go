@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -109,7 +109,8 @@ func UpdateDNS(host, domain, password, ip string) error {
 func main() {
 	// Load environment variables from .env
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		slog.Error("Error loading .env file")
+		os.Exit(1)
 	}
 
 	domain := os.Getenv("DOMAIN_NAME")
@@ -119,7 +120,8 @@ func main() {
 	// Get current .env hash
 	currentEnvHash, err := GetEnvHash()
 	if err != nil {
-		log.Fatalf("Error computing .env hash: %v", err)
+		slog.Error("Error computing .env hash", "err", err)
+		os.Exit(1)
 	}
 
 	// Read the last stored .env hash
@@ -131,13 +133,13 @@ func main() {
 	// Get the public IP
 	publicIP, err := GetPublicIP()
 	if err != nil {
-		log.Printf("Error fetching public IP: %v", err)
+		slog.Warn("Error fetching public IP", "err", err)
 	}
 
 	// Read last known IP to avoid unnecessary updates
 	lastIP := ReadLastIP()
 	if publicIP == lastIP && !envChanged {
-		fmt.Printf("IP changed: %v, .env changed: %v, no update needed.\n", publicIP != lastIP, envChanged)
+		slog.Debug("Did not detect changes, no update needed", "ip changed?", publicIP != lastIP, ".env changed?", envChanged)
 		return
 	}
 
@@ -145,17 +147,17 @@ func main() {
 	for _, host := range hosts {
 		host = strings.TrimSpace(host)
 		if err := UpdateDNS(host, domain, password, publicIP); err != nil {
-			log.Printf("Failed to update DNS for %s: %v", host, err)
+			slog.Warn("Failed to update DNS for", "host", host, "err", err)
 		}
 	}
 
 	// Store the updated IP
 	if err := WriteLastIP(publicIP); err != nil {
-		log.Printf("Failed to write last IP: %v", err)
+		slog.Warn("Failed to write last IP", "err", err)
 	}
 
 	// store env hash, so that if the env file changes we will update DNS
 	if err := WriteLastEnvHash(currentEnvHash); err != nil {
-		log.Printf("Failed to write last .env hash: %v", err)
+		slog.Warn("Failed to write last .env hash", "err", err)
 	}
 }

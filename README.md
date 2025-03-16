@@ -92,4 +92,3 @@ sudo systemctl start ddns-updater
 ## TODO
 
 - Add logrotate to logfile
-- Use Slog and timestamp
