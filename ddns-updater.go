@@ -107,6 +107,20 @@ func UpdateDNS(host, domain, password, ip string) error {
 }
 
 func main() {
+	// Open a log file for writing
+	file, err := os.OpenFile("ddns-updater.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		panic("Failed to open log file: " + err.Error())
+	}
+	defer file.Close()
+
+	// Create a text handler that writes to the file
+	handler := slog.NewTextHandler(file, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+
 	// Load environment variables from .env
 	if err := godotenv.Load(); err != nil {
 		slog.Error("Error loading .env file")
